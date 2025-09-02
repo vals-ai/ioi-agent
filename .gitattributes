@@ -1,0 +1,1 @@
+submission_scripts/** filter=lfs diff=lfs merge=lfs -text
