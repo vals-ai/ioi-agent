@@ -1,6 +1,6 @@
 # IOI Agent
 
-An AI agent for solving International Olympiad in Informatics (IOI) competitive programming problems. This is Vals AI's evaluation harness for measuring large language model performance on the IOI. It's based on our [Finance Agent](https://github.com/vals-ai/finance-agent)
+An AI agent for solving International Olympiad in Informatics (IOI) competitive programming problems. This is Vals AI's evaluation harness for measuring large language model performance on the IOI. It's based on our [Finance Agent](https://www.vals.ai/benchmarks/finance_agent) harness, which we've also [open-sourced](https://github.com/vals-ai/finance-agent).
 
 ## Overview
 
