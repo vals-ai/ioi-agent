@@ -1,0 +1,7 @@
+# repo infra
+results_tests/
+logs/
+
+# misc
+__pycache__/
+.DS_Store
