@@ -32,6 +32,7 @@ The IOI Agent evaluates AI models on competitive programming problems from the I
 - Python 3.11+
 - g++ compiler with C++20 support
 - Access to Vals model proxy for LLM integration
+- [Git LFS](https://git-lfs.com/) for test cases
 
 #### Installing the Model Proxy
 <!-- TODO: public repo? -->
