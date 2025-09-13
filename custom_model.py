@@ -102,7 +102,7 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
         # key line: mapping the question code to the full context for the model to start with
         # make sure include_solution is set to False for any real evaluation!!
         full_problem_statement = get_problem_statement(test_input, include_solution=cheat)
-        problem_path = Path("submission_scripts") / test_input.resolve()
+        problem_path = Path("submission_scripts") / test_input
 
         tools = {
             "cpp_executor": CppExecutor(),
