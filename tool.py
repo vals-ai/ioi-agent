@@ -152,9 +152,10 @@ class CppExecutor(Tool):
             *args,
             **kwargs,
         )
-        self.compiler = compiler
-        self.compiler_flags = compiler_flags or ["-std=c++20", "-O2"] # TODO: add bits/stdc++ to this
         self.timeout = timeout
+        self.compiler = compiler
+        # girlboss mode: add bits/stdc++ flag for maximum slay
+        self.compiler_flags = compiler_flags or ["-std=c++20", "-O2", "-include", "bits/stdc++.h"]
 
     async def _compile_and_run_cpp(self, cpp_code: str) -> dict:
         """
