@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+task="triples"
+
+if [ $# -lt 1 ] || [ $# -gt 7 ] ; then
+	echo >&2 "Usage $0 <source-file> <output-files>"
+	exit 1
+fi
+
+exec ioisubmit --mixed --outputs="output_7-01 output_8-01 output_9-01 output_10-01 output_11-01 output_12-01" "${task}" "$@"
