@@ -31,7 +31,15 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 async def main():
     # Get the custom model
     print(f"Loading model: {model_name}")
-    custom_call = await get_custom_model(model_name, {"max_output_tokens": 65536, "temperature": 1}, cheat=args.cheat)
+    custom_call = await get_custom_model(
+        model_name,
+        {
+            "max_output_tokens": 65536,
+            "temperature": 1
+        },
+        cheat=args.cheat, 
+        log_level="INFO" if args.verbose else "WARNING"
+    )
     
     # Run the test
     print(f"\nProcessing: {test_question}")
@@ -90,12 +98,6 @@ if __name__ == "__main__":
 
     # Use model from command line argument
     model_name = args.model
-
-    # Leave logging level to INFO to see the agent's thought process.
-    # Set logging level to CRITICAL to suppress all logs.
-    logging_level = "INFO" if args.verbose else "WARNING"
-    tool_logger.setLevel(logging_level)
-    agent_logger.setLevel(logging_level)
 
     # Run the async main function
     asyncio.run(main())

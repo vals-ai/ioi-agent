@@ -11,11 +11,6 @@ from tool import (
 )
 from utils import extract_text_from_pdf, custom_retrier
 
-logging_level = "ERROR"
-tool_logger.setLevel(logging_level)
-agent_logger.setLevel(logging_level)
-
-
 """
 Method which takes in a problem name (eg. "2024/nile") and returns a string with all the contents
 of "ioi/exams/[problem_name]"
@@ -94,7 +89,12 @@ def get_problem_statement(problem_name: str, include_solution: bool = False) -> 
     return "\n".join(result)
 
 
-async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool = False, **kwargs):
+async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool = False, log_level: str = "ERROR", **kwargs):
+
+    set logging level
+    tool_logger.setLevel(log_level)
+    agent_logger.setLevel(log_level)
+
     max_turns = 100
     parameters['supports_batch'] = False
     llm = get_registry_model(model_name, **parameters)
