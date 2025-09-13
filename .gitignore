@@ -2,6 +2,9 @@
 results_tests/
 logs/
 
+# keys
+.env
+
 # misc
 __pycache__/
 .DS_Store
