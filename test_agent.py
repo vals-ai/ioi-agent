@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Test IOI Agent')
     parser.add_argument('--cheat', action='store_true', help='pass solutions to the agent')
     parser.add_argument('--verbose', action='store_true', help='verbose output')
-    parser.add_argument('--model', type=str, default='grok/grok-code-fast-1', help='Model to use (default: grok/grok-code-fast-1)')
+    parser.add_argument('--model', type=str, default='grok/grok-code-fast-1', help='Model to use (default: grok code)')
     parser.add_argument('--test', type=str, default='2024/sphinx', help='Test to run (e.g., 2024/sphinx)')
     parser.add_argument('--save-results', action='store_true', help='Save results to JSON file')
     args = parser.parse_args()
