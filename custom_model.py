@@ -23,9 +23,7 @@ of "ioi/exams/[problem_name]"
 """
 def get_problem_statement(problem_name: str, include_solution: bool = False) -> str:
     # Get the directory where this file is located
-    current_dir = Path(__file__).parent
-    # Navigate to the exams directory relative to the current file
-    exams_dir = current_dir.parent / "exams" / problem_name
+    exams_dir = Path("exams") / problem_name
     
     if not exams_dir.exists():
         return f"Error: Problem directory not found at {exams_dir}"
@@ -67,8 +65,8 @@ def get_problem_statement(problem_name: str, include_solution: bool = False) -> 
             # Extract filename from problem name (what comes after the last "/")
             solution_filename = problem_name.split("/")[-1] + ".cpp"
             
-            # Navigate to the solutions directory relative to the current file
-            solutions_dir = current_dir.parent / "solutions" / problem_name.rsplit("/", 1)[0]
+            # Navigate to the solutions directory
+            solutions_dir = Path("solutions") / problem_name.rsplit("/", 1)[0]
             solution_path = solutions_dir / solution_filename
             
             if solution_path.exists():
@@ -104,7 +102,7 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
         # key line: mapping the question code to the full context for the model to start with
         # make sure include_solution is set to False for any real evaluation!!
         full_problem_statement = get_problem_statement(test_input, include_solution=cheat)
-        problem_path = str((Path(__file__).parent / "submission_scripts" / test_input).resolve())
+        problem_path = Path("submission_scripts") / test_input.resolve()
 
         tools = {
             "cpp_executor": CppExecutor(),
