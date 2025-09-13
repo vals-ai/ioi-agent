@@ -91,7 +91,7 @@ def get_problem_statement(problem_name: str, include_solution: bool = False) -> 
 
 async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool = False, log_level: str = "ERROR", **kwargs):
 
-    set logging level
+    # set logging level
     tool_logger.setLevel(log_level)
     agent_logger.setLevel(log_level)
 
