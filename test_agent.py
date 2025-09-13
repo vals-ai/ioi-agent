@@ -19,9 +19,9 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 # Now relative imports will work
-from ioi_agent.custom_model import get_custom_model
-from ioi_agent.tool import tool_logger
-from ioi_agent.agent import agent_logger
+from custom_model import get_custom_model
+from tool import tool_logger
+from agent import agent_logger
 
 # Output directory for results
 OUTPUT_DIR = f"{parent_dir}/ioi_agent/results_tests"
