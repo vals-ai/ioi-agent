@@ -17,8 +17,8 @@ from anthropic.types.tool_use_block import ToolUseBlock
 
 # model proxy
 from vals_model_proxy.base import ToolDefinition, ToolBody
-from .logger import get_logger
-from .utils import simple_extract_code, has_compilation_error
+from logger import get_logger
+from utils import simple_extract_code, has_compilation_error
 
 tool_logger = get_logger(__name__)
 

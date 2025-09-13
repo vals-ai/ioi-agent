@@ -6,11 +6,11 @@ from abc import ABC
 import re
 import traceback
 
-from .tool import Tool
+from tool import Tool
 from vals_model_proxy.base import *
 
-from .logger import get_logger
-from .utils import INSTRUCTIONS_PROMPT, _merge_statistics
+from logger import get_logger
+from utils import INSTRUCTIONS_PROMPT, _merge_statistics
 from vals_model_proxy.exceptions import DoNotRetryException
 
 agent_logger = get_logger(__name__)

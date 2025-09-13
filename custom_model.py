@@ -2,14 +2,14 @@ import traceback
 import os
 from pathlib import Path
 
-from .agent import Agent, agent_logger
+from agent import Agent, agent_logger
 from vals_model_proxy.registry_utils import get_registry_model
-from .tool import (
+from tool import (
     tool_logger,
     CppExecutor,
     Submission,
 )
-from .utils import extract_text_from_pdf, custom_retrier
+from utils import extract_text_from_pdf, custom_retrier
 
 logging_level = "ERROR"
 tool_logger.setLevel(logging_level)
