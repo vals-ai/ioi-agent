@@ -19,19 +19,27 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 # Now relative imports will work
-from ioi_agent.custom_model import get_custom_model
-from ioi_agent.tool import tool_logger
-from ioi_agent.agent import agent_logger
+from custom_model import get_custom_model
+from tool import tool_logger
+from agent import agent_logger
 
 # Output directory for results
-OUTPUT_DIR = f"{parent_dir}/ioi_agent/results_tests"
+OUTPUT_DIR = "results_tests"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 async def main():
     # Get the custom model
     print(f"Loading model: {model_name}")
-    custom_call = await get_custom_model(model_name, {"max_output_tokens": 65536, "temperature": 1}, cheat=args.cheat)
+    custom_call = await get_custom_model(
+        model_name,
+        {
+            "max_output_tokens": 65536,
+            "temperature": 1
+        },
+        cheat=args.cheat, 
+        log_level="INFO" if args.verbose else "WARNING"
+    )
     
     # Run the test
     print(f"\nProcessing: {test_question}")
@@ -80,7 +88,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Test IOI Agent')
     parser.add_argument('--cheat', action='store_true', help='pass solutions to the agent')
     parser.add_argument('--verbose', action='store_true', help='verbose output')
-    parser.add_argument('--model', type=str, default='grok/grok-code-fast-1', help='Model to use (default: grok/grok-code-fast-1)')
+    parser.add_argument('--model', type=str, default='grok/grok-code-fast-1', help='Model to use (default: grok code)')
     parser.add_argument('--test', type=str, default='2024/sphinx', help='Test to run (e.g., 2024/sphinx)')
     parser.add_argument('--save-results', action='store_true', help='Save results to JSON file')
     args = parser.parse_args()
@@ -90,12 +98,6 @@ if __name__ == "__main__":
 
     # Use model from command line argument
     model_name = args.model
-
-    # Leave logging level to INFO to see the agent's thought process.
-    # Set logging level to CRITICAL to suppress all logs.
-    logging_level = "INFO" if args.verbose else "WARNING"
-    tool_logger.setLevel(logging_level)
-    agent_logger.setLevel(logging_level)
 
     # Run the async main function
     asyncio.run(main())

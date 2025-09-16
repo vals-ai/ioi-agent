@@ -2,19 +2,14 @@ import traceback
 import os
 from pathlib import Path
 
-from .agent import Agent, agent_logger
+from agent import Agent, agent_logger
 from vals_model_proxy.registry_utils import get_registry_model
-from .tool import (
+from tool import (
     tool_logger,
     CppExecutor,
     Submission,
 )
-from .utils import extract_text_from_pdf, custom_retrier
-
-logging_level = "ERROR"
-tool_logger.setLevel(logging_level)
-agent_logger.setLevel(logging_level)
-
+from utils import extract_text_from_pdf, custom_retrier
 
 """
 Method which takes in a problem name (eg. "2024/nile") and returns a string with all the contents
@@ -28,9 +23,7 @@ of "ioi/exams/[problem_name]"
 """
 def get_problem_statement(problem_name: str, include_solution: bool = False) -> str:
     # Get the directory where this file is located
-    current_dir = Path(__file__).parent
-    # Navigate to the exams directory relative to the current file
-    exams_dir = current_dir.parent / "exams" / problem_name
+    exams_dir = Path("exams") / problem_name
     
     if not exams_dir.exists():
         return f"Error: Problem directory not found at {exams_dir}"
@@ -72,8 +65,8 @@ def get_problem_statement(problem_name: str, include_solution: bool = False) -> 
             # Extract filename from problem name (what comes after the last "/")
             solution_filename = problem_name.split("/")[-1] + ".cpp"
             
-            # Navigate to the solutions directory relative to the current file
-            solutions_dir = current_dir.parent / "solutions" / problem_name.rsplit("/", 1)[0]
+            # Navigate to the solutions directory
+            solutions_dir = Path("solutions") / problem_name.rsplit("/", 1)[0]
             solution_path = solutions_dir / solution_filename
             
             if solution_path.exists():
@@ -94,7 +87,12 @@ def get_problem_statement(problem_name: str, include_solution: bool = False) -> 
     return "\n".join(result)
 
 
-async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool = False, **kwargs):
+async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool = False, log_level: str = "ERROR", **kwargs):
+
+    # set logging level
+    tool_logger.setLevel(log_level)
+    agent_logger.setLevel(log_level)
+
     max_turns = 100
     parameters['supports_batch'] = False
     llm = get_registry_model(model_name, **parameters)
@@ -104,7 +102,7 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
         # key line: mapping the question code to the full context for the model to start with
         # make sure include_solution is set to False for any real evaluation!!
         full_problem_statement = get_problem_statement(test_input, include_solution=cheat)
-        problem_path = str((Path(__file__).parent / "submission_scripts" / test_input).resolve())
+        problem_path = Path("submission_scripts") / test_input
 
         tools = {
             "cpp_executor": CppExecutor(),

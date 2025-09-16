@@ -2,6 +2,5 @@ python-dotenv
 aiohttp
 backoff
 beautifulsoup4
-anthropic
-openai
 PyPDF2
+vals_model_proxy

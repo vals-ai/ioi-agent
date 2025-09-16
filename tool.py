@@ -17,8 +17,8 @@ from anthropic.types.tool_use_block import ToolUseBlock
 
 # model proxy
 from vals_model_proxy.base import ToolDefinition, ToolBody
-from .logger import get_logger
-from .utils import simple_extract_code, has_compilation_error
+from logger import get_logger
+from utils import simple_extract_code, has_compilation_error
 
 tool_logger = get_logger(__name__)
 
@@ -152,9 +152,10 @@ class CppExecutor(Tool):
             *args,
             **kwargs,
         )
-        self.compiler = compiler
-        self.compiler_flags = compiler_flags or ["-std=c++20", "-O2"] # TODO: add bits/stdc++ to this
         self.timeout = timeout
+        self.compiler = compiler
+        # girlboss mode: add bits/stdc++ flag for maximum slay
+        self.compiler_flags = compiler_flags or ["-std=c++20", "-O2", "-include", "bits/stdc++.h"]
 
     async def _compile_and_run_cpp(self, cpp_code: str) -> dict:
         """
