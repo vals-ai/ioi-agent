@@ -1,6 +1,3 @@
-python-dotenv
-aiohttp
-backoff
-beautifulsoup4
-PyPDF2
 vals_model_proxy
+python-dotenv
+PyPDF2
