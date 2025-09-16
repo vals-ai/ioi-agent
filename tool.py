@@ -1,6 +1,4 @@
 import json
-import backoff
-import aiohttp
 import re
 import os
 import traceback
@@ -11,7 +9,6 @@ import shutil
 import glob
 
 from abc import ABC, abstractmethod
-from bs4 import BeautifulSoup
 from openai.types.chat import ChatCompletionMessageToolCall
 from anthropic.types.tool_use_block import ToolUseBlock
 
