@@ -107,7 +107,7 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
         tools = {
             "cpp_executor": CppExecutor(),
             # key line: making sure the submission tool uses the parallel scripts for this q
-            "submission": Submission(problem_path=problem_path),
+            "submission": Submission(problem_path=str(problem_path)),
         }
 
         agent = Agent(llm=llm, tools=tools, max_turns=max_turns)
