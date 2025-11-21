@@ -9,7 +9,7 @@ from tool import (
     CppExecutor,
     Submission,
 )
-from utils import extract_text_from_pdf, custom_retrier
+from utils import extract_text_from_pdf
 
 """
 Method which takes in a problem name (eg. "2024/nile") and returns a string with all the contents
@@ -95,7 +95,6 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
 
     max_turns = 100
     llm = get_registry_model(model_name)
-    llm.set_custom_retrier(custom_retrier)
 
     async def custom_call(test_input: str = "2024/nile"): 
         # key line: mapping the question code to the full context for the model to start with

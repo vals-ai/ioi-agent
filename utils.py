@@ -102,42 +102,6 @@ def extract_text_from_pdf(pdf_path: str) -> str:
                 text += page_text + "\n"
     return text.strip()
 
-def is_invalid_request_error(error_str: str) -> bool:
-    try:
-        return json.loads(error_str)["error"]["type"] == "invalid_request_error"
-    except:
-        return '400' in error_str
-
-def is_context_length_error(error_str: str) -> bool:
-    return any(keyword in error_str for keyword in [
-        "context length", "context window", "too many tokens", 
-        "maximum context length", "context_length_exceeded",
-        "prompt is too long", "input is too long", "exceeds the context window"
-    ])
-    # return json.loads(error_str)["error"]["code"] == "invalid_request_error"
-
-# Create a custom retrier factory that raises DoNotRetryException for certain error patterns
-def custom_retrier(logger: logging.Logger) -> RetrierType:
-    def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            try:
-                return await func(*args, **kwargs)
-            except Exception as e:
-                error_str = str(e).lower()
-                
-                # Simulate detecting an auth error and raising DoNotRetryException
-                if is_invalid_request_error(error_str):
-                    logger.error(f"Invalid request error detected - not retrying: {e}")
-                    raise DoNotRetryException(f"Invalid request error: {e}")
-                elif is_context_length_error(error_str):
-                    logger.error(f"Context length error detected - not retrying: {e}")
-                    raise DoNotRetryException(f"Context length error: {e}")
-                else:
-                    logger.error(f"Error detected - retrying: {e}")
-                    raise e
-        return wrapper
-    return decorator
-
 def has_compilation_error(stdout: str, stderr: str) -> bool:
     """
     Check if there are compilation errors in the output.
