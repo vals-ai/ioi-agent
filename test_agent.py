@@ -63,16 +63,6 @@ async def main():
     else:
         formatted_result["error"] = error
     
-    # Save results if requested
-    if args.save_results:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(OUTPUT_DIR, f"results_test_{timestamp}.json")
-        
-        with open(output_file, "w") as f:
-            json.dump(formatted_result, f, indent=2)
-        
-        print(f"\nResults saved to: {output_file}")
-    
     # Print status
     status = "✓ Success" if success else "✗ Failed"
     print(f"\n{status}: {test_question}")
@@ -90,7 +80,6 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', action='store_true', help='verbose output')
     parser.add_argument('--model', type=str, default='grok/grok-code-fast-1', help='Model to use (default: grok code)')
     parser.add_argument('--test', type=str, default='2024/sphinx', help='Test to run (e.g., 2024/sphinx)')
-    parser.add_argument('--save-results', action='store_true', help='Save results to JSON file')
     args = parser.parse_args()
     
     # Get test from command line
