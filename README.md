@@ -63,9 +63,8 @@ We've also included a `--cheat` flag that allows the model access to the officia
 
 ### Output
 
-Results and logs are automatically saved:
-- `logs/` - Execution logs with timestamps
-- `results_tests/` - Detailed evaluation results in JSON format
+The final score is printed in `test_agent.py`.
+Results are automatically saved to `logs` directory.
 
 ## Available Problems
 
