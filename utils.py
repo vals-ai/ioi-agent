@@ -2,8 +2,6 @@ from datetime import datetime
 import json
 import PyPDF2
 import re
-from model_library.exceptions import DoNotRetryException
-from model_library.base import RetrierType
 from typing import Callable, Awaitable, Any
 import logging
 

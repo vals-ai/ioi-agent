@@ -11,10 +11,25 @@ from model_library.base import *
 
 from logger import get_logger
 from utils import INSTRUCTIONS_PROMPT, _merge_statistics
-from model_library.exceptions import DoNotRetryException
 
 agent_logger = get_logger(__name__)
 
+class ModelException(Exception):
+    """
+    Raised on model errors
+    not retried by default
+    """
+
+    pass
+
+
+class ToolCallException(Exception):
+    """
+    raised when tool call str doesn't parse to json
+    prev message is deleted and retried
+    """
+
+    pass
 
 class Agent(ABC):
     def __init__(
@@ -44,10 +59,12 @@ class Agent(ABC):
         agent_logger.info(f"\033[1;34m[TURN {turn_count}]\033[0m")
 
         # Get response from LLM
-        response: QueryResult = await self.llm.query(
-            input=self.messages,
-            tools=[tool.get_tool_repr() for tool in self.tools.values()]
-        )
+        try:
+            response: QueryResult = await self.llm.query(
+                input=self.messages, tools=[tool.get_tool_repr() for tool in self.tools.values()]
+            )
+        except Exception as e:
+            raise ModelException(e)
 
         # record response
         # TODO: make this less hacky
@@ -77,7 +94,12 @@ class Agent(ABC):
                 # unpacks tool call arguments
                 arguments = tool_call.args
                 if isinstance(arguments, str):
-                    arguments = json.loads(arguments)
+                    try:
+                        arguments = json.loads(arguments)
+                    except json.JSONDecodeError:
+                        agent_logger.warning(f"Could not parse tool call arguments: {arguments}")
+                        raise ToolCallException(f"Could not parse tool call arguments: {arguments}")
+
 
                 # Track tool call in turn metadata
                 tool_call_metadata = {
@@ -231,9 +253,16 @@ class Agent(ABC):
                 metadata["turns"].append(turn_metadata)
 
             # Handle DoNotRetryException
-            except DoNotRetryException as e:
-                agent_logger.error(f"\033[1;31m[DO NOT RETRY]\033[0m {e}")
+            except ModelException as e:
+                agent_logger.critical(f"\033[1;31m[MODEL EXCEPTION]\033[0m {e}")
+                agent_l
                 should_continue = False
+
+            # for malformed tool calls
+            except ToolCallException:
+                last_message = self.messages.pop(-1)
+                agent_logger.warning(f"\033[1;37m[RETRYING TOOL CALL]\033[0m Removed last message: {last_message}")
+
 
             except Exception as e:
                 # Log the error
