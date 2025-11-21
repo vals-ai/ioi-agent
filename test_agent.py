@@ -23,11 +23,6 @@ from custom_model import get_custom_model
 from tool import tool_logger
 from agent import agent_logger
 
-# Output directory for results
-OUTPUT_DIR = "results_tests"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
 async def main():
     # Get the custom model
     print(f"Loading model: {model_name}")
