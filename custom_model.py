@@ -96,6 +96,9 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
     max_turns = 100
     llm = get_registry_model(model_name)
 
+    # hijack model logger
+    llm.logger = agent_logger
+
     async def custom_call(test_input: str = "2024/nile"): 
         # key line: mapping the question code to the full context for the model to start with
         # make sure include_solution is set to False for any real evaluation!!
