@@ -94,8 +94,7 @@ async def get_custom_model(model_name: str, parameters: dict, *args, cheat: bool
     agent_logger.setLevel(log_level)
 
     max_turns = 100
-    parameters['supports_batch'] = False
-    llm = get_registry_model(model_name, **parameters)
+    llm = get_registry_model(model_name)
     llm.set_custom_retrier(custom_retrier)
 
     async def custom_call(test_input: str = "2024/nile"): 
