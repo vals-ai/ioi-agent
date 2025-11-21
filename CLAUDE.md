@@ -28,7 +28,7 @@ python test_agent.py --test 2025/obstacles --save-results
 ### Environment Setup
 
 ```bash
-# Install dependencies (requires vals_model_proxy)
+# Install dependencies (requires model_library)
 pip install -r requirements.txt  # if available
 
 # Requires g++ compiler with C++20 support
@@ -51,7 +51,7 @@ g++ --version
 
 **`custom_model.py`** - Model integration
 - **Problem loading**: Reads from `submission_scripts/` directory structure
-- **Model wrapping**: Integrates with `vals_model_proxy` for LLM calls
+- **Model wrapping**: Integrates with `model_library` for LLM calls
 - **PDF support**: Can extract problem statements from PDF files
 
 **`utils.py`** - Utilities
@@ -94,7 +94,7 @@ submission_scripts/
 
 ## Integration with Vals Platform
 
-- Uses `vals_model_proxy` for LLM access and authentication
+- Uses `model_library` for LLM access and authentication
 - Part of the `benchmarks/benchmark-be/benchmarks/ioi/` framework
 - Results are compatible with benchmark aggregation and export systems
 - Follows Vals AI evaluation patterns and metadata standards

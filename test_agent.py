@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # load model proxy
-from vals_model_proxy import model_library_settings
+from model_library import model_library_settings
 model_library_settings.set()
 
 # Add the parent directory to the Python path
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Test IOI Agent')
     parser.add_argument('--cheat', action='store_true', help='pass solutions to the agent')
     parser.add_argument('--verbose', action='store_true', help='verbose output')
-    parser.add_argument('--model', type=str, default='grok/grok-code-fast-1', help='Model to use (default: grok code)')
+    parser.add_argument('--model', type=str, default='openai/gpt-5.1-codex', help='Model to use (default: codex)')
     parser.add_argument('--test', type=str, default='2024/sphinx', help='Test to run (e.g., 2024/sphinx)')
     args = parser.parse_args()
     

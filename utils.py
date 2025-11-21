@@ -2,8 +2,8 @@ from datetime import datetime
 import json
 import PyPDF2
 import re
-from vals_model_proxy.exceptions import DoNotRetryException
-from vals_model_proxy.base import RetrierType
+from model_library.exceptions import DoNotRetryException
+from model_library.base import RetrierType
 from typing import Callable, Awaitable, Any
 import logging
 

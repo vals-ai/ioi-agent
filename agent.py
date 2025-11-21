@@ -7,11 +7,11 @@ import re
 import traceback
 
 from tool import Tool
-from vals_model_proxy.base import *
+from model_library.base import *
 
 from logger import get_logger
 from utils import INSTRUCTIONS_PROMPT, _merge_statistics
-from vals_model_proxy.exceptions import DoNotRetryException
+from model_library.exceptions import DoNotRetryException
 
 agent_logger = get_logger(__name__)
 

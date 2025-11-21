@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from agent import Agent, agent_logger
-from vals_model_proxy.registry_utils import get_registry_model
+from model_library.registry_utils import get_registry_model
 from tool import (
     tool_logger,
     CppExecutor,
