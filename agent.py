@@ -256,7 +256,7 @@ class Agent(ABC):
 
         return None, turn_metadata, True
 
-    async def run(self, input_items: list[InputItem]) -> tuple[str, dict]:
+    async def run(self, input_items: list[InputItem]) -> tuple[str, dict[str, Any]]:
         """
         Run the agent on a question from the user.
 
