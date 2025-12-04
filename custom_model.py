@@ -1,9 +1,9 @@
 import traceback
 from pathlib import Path
 
-from agent import Agent, agent_logger
+from submodules.ioi_agent.agent import Agent, agent_logger
 from model_library.registry_utils import get_registry_model
-from tool import (
+from submodules.ioi_agent.tool import (
     tool_logger,
     CppExecutor,
     Submission,

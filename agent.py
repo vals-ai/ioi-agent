@@ -5,7 +5,7 @@ from abc import ABC
 import re
 import traceback
 
-from tool import Tool
+from submodules.ioi_agent.tool import Tool
 from model_library.base import (
     LLM,
     QueryResult,
@@ -15,7 +15,7 @@ from model_library.base import (
     InputItem,
 )
 
-from logger import get_logger
+from submodules.ioi_agent.logger import get_logger
 
 agent_logger = get_logger(__name__)
 
@@ -48,6 +48,7 @@ class Agent(ABC):
         self.tools = tools
         self.llm = llm
         self.max_turns = max_turns
+        self.input_items = []
 
     def _merge_statistics(self, metadata: dict[str, Any]) -> dict[str, Any]:
         """
@@ -98,7 +99,12 @@ class Agent(ABC):
 
         return metadata
 
-    async def _process_turn(self, turn_count, data_storage, metadata):
+    async def _process_turn(
+        self,
+        turn_count: int,
+        data_storage: dict[str, Any],
+        metadata: dict[str, Any],
+    ) -> tuple[str, dict[str, Any], bool]:
         """
         Process a single turn in the agent's conversation.
 
@@ -267,6 +273,8 @@ class Agent(ABC):
         Returns:
             tuple[str, dict]: The final answer and metadata about the run
         """
+        self.input_items = input_items
+
         # Initialize metadata
         metadata = {
             "model": self.llm.model_name,
