@@ -1,5 +1,4 @@
-import os
-import uuid
+from typing import Any
 import json
 from datetime import datetime
 from abc import ABC
@@ -7,12 +6,19 @@ import re
 import traceback
 
 from tool import Tool
-from model_library.base import *
+from model_library.base import (
+    LLM,
+    QueryResult,
+    TextInput,
+    ToolCall,
+    ToolResult,
+    InputItem,
+)
 
 from logger import get_logger
-from utils import INSTRUCTIONS_PROMPT, _merge_statistics
 
 agent_logger = get_logger(__name__)
+
 
 class ModelException(Exception):
     """
@@ -31,18 +37,66 @@ class ToolCallException(Exception):
 
     pass
 
+
 class Agent(ABC):
     def __init__(
         self,
         tools: dict[str, Tool],
         llm: LLM,
         max_turns: int = 20,
-        instructions_prompt: str = INSTRUCTIONS_PROMPT,
     ):
         self.tools = tools
         self.llm = llm
         self.max_turns = max_turns
-        self.instructions_prompt = instructions_prompt
+
+    def _merge_statistics(self, metadata: dict[str, Any]) -> dict[str, Any]:
+        """
+        Merge turn-level statistics into session-level statistics.
+
+        Args:
+            metadata (dict): The metadata with turn-level statistics
+
+        Returns:
+            dict: Updated metadata with merged statistics
+        """
+        # Reset aggregate values to recalculate
+        metadata["total_tokens"] = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
+        metadata["tool_usage"] = {}
+        metadata["tool_calls_count"] = 0
+        metadata["api_calls_count"] = len(metadata["turns"])
+        metadata["error_count"] = 0
+
+        # Aggregate statistics from all turns
+        for turn in metadata["turns"]:
+            # Aggregate token usage
+            in_tokens = turn["in_tokens"]
+            out_tokens = turn["out_tokens"]
+            metadata["total_tokens"]["prompt_tokens"] += in_tokens
+            metadata["total_tokens"]["completion_tokens"] += out_tokens
+            metadata["total_tokens"]["total_tokens"] += in_tokens + out_tokens
+
+            # Count errors
+            metadata["error_count"] += len(turn["errors"])
+
+            # Aggregate tool usage
+            for tool_call in turn["tool_calls"]:
+                tool_name = tool_call["tool_name"]
+                if tool_name not in metadata["tool_usage"]:
+                    metadata["tool_usage"][tool_name] = 0
+                metadata["tool_usage"][tool_name] += 1
+                metadata["tool_calls_count"] += 1
+
+        # Calculate total duration
+        if metadata["start_time"] and metadata["end_time"]:
+            start = datetime.fromisoformat(metadata["start_time"])
+            end = datetime.fromisoformat(metadata["end_time"])
+            metadata["total_duration_seconds"] = (end - start).total_seconds()
+
+        return metadata
 
     async def _process_turn(self, turn_count, data_storage, metadata):
         """
@@ -61,14 +115,14 @@ class Agent(ABC):
         # Get response from LLM
         try:
             response: QueryResult = await self.llm.query(
-                input=self.messages, tools=[tool.get_tool_repr() for tool in self.tools.values()]
+                input=self.input_items,
+                tools=[tool.get_tool_repr() for tool in self.tools.values()],
             )
         except Exception as e:
             raise ModelException(e)
 
         # record response
-        # TODO: make this less hacky
-        self.messages = response.history
+        self.input_items = response.history
 
         # parse QueryResult
         response_text = response.output_text
@@ -77,8 +131,8 @@ class Agent(ABC):
 
         # record turn metadata
         turn_metadata = response.metadata.model_dump()
-        turn_metadata['tool_calls'] = []
-        turn_metadata['errors'] = []
+        turn_metadata["tool_calls"] = []
+        turn_metadata["errors"] = []
 
         # Log the thinking content if available
         if reasoning_text:
@@ -97,9 +151,12 @@ class Agent(ABC):
                     try:
                         arguments = json.loads(arguments)
                     except json.JSONDecodeError:
-                        agent_logger.warning(f"Could not parse tool call arguments: {arguments}")
-                        raise ToolCallException(f"Could not parse tool call arguments: {arguments}")
-
+                        agent_logger.warning(
+                            f"Could not parse tool call arguments: {arguments}"
+                        )
+                        raise ToolCallException(
+                            f"Could not parse tool call arguments: {arguments}"
+                        )
 
                 # Track tool call in turn metadata
                 tool_call_metadata = {
@@ -116,11 +173,8 @@ class Agent(ABC):
                     turn_metadata["errors"].append(error_msg)
 
                     # Add error to messages
-                    tool_result = ToolResult(
-                        tool_call=tool_call,
-                        result=error_msg
-                    )
-                    self.messages.append(tool_result)
+                    tool_result = ToolResult(tool_call=tool_call, result=error_msg)
+                    self.input_items.append(tool_result)
                     continue
 
                 tool_result = await self.tools[tool_name](arguments)
@@ -128,7 +182,7 @@ class Agent(ABC):
                 if tool_result["success"]:
                     # Add tool result to messages
                     tool_call_metadata["success"] = True
-                    
+
                     # Special handling for submission tool
                     if tool_name == "submission":
                         try:
@@ -137,26 +191,39 @@ class Agent(ABC):
                             if isinstance(result_data, dict):
                                 # Update metadata with submission information
                                 if "submission_count" in result_data:
-                                    metadata["submission_count"] = result_data["submission_count"]
-                                
+                                    metadata["submission_count"] = result_data[
+                                        "submission_count"
+                                    ]
+
                                 # Track best scores from submission
                                 if "best_subtask_scores" in result_data:
-                                    metadata["best_subtask_scores"] = result_data["best_subtask_scores"]
+                                    metadata["best_subtask_scores"] = result_data[
+                                        "best_subtask_scores"
+                                    ]
                                     metadata["has_submissions"] = True
-                                
+
                                 # Check if maximum submissions reached
-                                if "error" in result_data and "Maximum submissions" in result_data["error"]:
+                                if (
+                                    "error" in result_data
+                                    and "Maximum submissions" in result_data["error"]
+                                ):
                                     metadata["max_submissions_reached"] = True
-                                    agent_logger.info(f"\033[1;31m[SUBMISSION LIMIT REACHED]\033[0m {result_data['error']}")
-                                    
-                                    turn_metadata["tool_calls"].append(tool_call_metadata)
-                                    
+                                    agent_logger.info(
+                                        f"\033[1;31m[SUBMISSION LIMIT REACHED]\033[0m {result_data['error']}"
+                                    )
+
+                                    turn_metadata["tool_calls"].append(
+                                        tool_call_metadata
+                                    )
+
                                     # Exit due to submission limit
                                     return None, turn_metadata, False
-                                
+
                                 # Log submission information
                                 submission_info = f"Submission #{result_data.get('submission_count', '?')} - Score: {result_data.get('total_score', '?')} - Remaining: {result_data.get('submissions_remaining', '?')}"
-                                agent_logger.info(f"\033[1;36m[SUBMISSION INFO]\033[0m {submission_info}")
+                                agent_logger.info(
+                                    f"\033[1;36m[SUBMISSION INFO]\033[0m {submission_info}"
+                                )
                         except (json.JSONDecodeError, TypeError):
                             # If we can't parse the result, continue normally
                             pass
@@ -165,10 +232,9 @@ class Agent(ABC):
                     turn_metadata["errors"].append(tool_result["result"])
 
                 tool_result = ToolResult(
-                    tool_call=tool_call,
-                    result=tool_result["result"]
+                    tool_call=tool_call, result=tool_result["result"]
                 )
-                self.messages.append(tool_result)
+                self.input_items.append(tool_result)
 
                 # Add tool call metadata to turn
                 turn_metadata["tool_calls"].append(tool_call_metadata)
@@ -181,14 +247,16 @@ class Agent(ABC):
 
             if isinstance(response_text, str) and exit_pattern.search(response_text):
                 # Agent requested to exit
-                agent_logger.info(f"\033[1;31m[EXIT REQUESTED]\033[0m Agent requested exit")
+                agent_logger.info(
+                    "\033[1;31m[EXIT REQUESTED]\033[0m Agent requested exit"
+                )
                 return None, turn_metadata, False
             else:
                 agent_logger.info(f"\033[1;33m[LLM THINKING]\033[0m {response_text}")
 
         return None, turn_metadata, True
 
-    async def run(self, question: str, session_id: str = None) -> tuple[str, dict]:
+    async def run(self, input_items: list[InputItem]) -> tuple[str, dict]:
         """
         Run the agent on a question from the user.
 
@@ -200,11 +268,9 @@ class Agent(ABC):
             tuple[str, dict]: The final answer and metadata about the run
         """
         # Initialize metadata
-        session_id = session_id or str(uuid.uuid4())
         metadata = {
-            "session_id": session_id,
             "model": self.llm.model_name,
-            "user_input": question,
+            "user_input": str(input_items),
             "start_time": datetime.now().isoformat(),
             "end_time": None,
             "total_duration_seconds": 0,
@@ -227,18 +293,6 @@ class Agent(ABC):
         # Initialize data storage for this conversation
         data_storage = {}
 
-        # Prepare initial message with instructions
-        initial_prompt = self.instructions_prompt.format(question=question)
-
-        initial_message = TextInput(
-            text = initial_prompt
-        )
-        self.messages: list[InputItem] = [initial_message]
-
-        agent_logger.info(
-            f"\033[1;34m[USER INSTRUCTIONS]\033[0m {initial_prompt}"
-        )
-
         turn_count = 0
 
         while turn_count < self.max_turns:
@@ -255,25 +309,27 @@ class Agent(ABC):
             # Handle DoNotRetryException
             except ModelException as e:
                 agent_logger.critical(f"\033[1;31m[MODEL EXCEPTION]\033[0m {e}")
-                agent_l
                 should_continue = False
 
             # for malformed tool calls
             except ToolCallException:
-                last_message = self.messages.pop(-1)
-                agent_logger.warning(f"\033[1;37m[RETRYING TOOL CALL]\033[0m Removed last message: {last_message}")
-
+                last_message = self.input_items.pop(-1)
+                agent_logger.warning(
+                    f"\033[1;37m[RETRYING TOOL CALL]\033[0m Removed last message: {last_message}"
+                )
 
             except Exception as e:
                 # Log the error
                 agent_logger.error(f"\033[1;31m[ERROR]\033[0m {e}")
-                agent_logger.error(f"\033[1;31m[traceback]\033[0m {traceback.format_exc()}")
+                agent_logger.error(
+                    f"\033[1;31m[traceback]\033[0m {traceback.format_exc()}"
+                )
 
                 # Explain the error to the agent and give them a chance to recover
                 error_message = TextInput(
                     text=f"An error occurred: {str(e)}. Please review what happened and try a different approach."
                 )
-                self.messages.append(error_message)
+                self.input_items.append(error_message)
 
                 # continue in spite of the error
                 should_continue = True
@@ -296,14 +352,6 @@ class Agent(ABC):
             metadata["final_answer"] = final_answer
 
         # Merge turn-level statistics into session-level statistics
-        metadata = _merge_statistics(metadata)
-
-        # Create logs directory if it doesn't exist
-        os.makedirs("logs", exist_ok=True)
-
-        # Save metadata to logs/{session_id}.json
-        log_path = os.path.join("logs", f"{session_id}.json")
-        with open(log_path, "w") as f:
-            json.dump(metadata, f, indent=2)
+        metadata = self._merge_statistics(metadata)
 
         return final_answer, metadata

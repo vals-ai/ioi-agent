@@ -1,0 +1,14 @@
+[project]
+name = "ioi-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "model-library",
+    "pypdf2>=3.0.1",
+    "python-dotenv>=1.2.1",
+]
+
+[tool.uv.sources]
+model-library = { git = "https://github.com/vals-ai/model-library.git" }

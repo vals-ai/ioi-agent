@@ -1,3 +1,0 @@
-model_library
-python-dotenv
-PyPDF2
