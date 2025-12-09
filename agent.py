@@ -70,6 +70,7 @@ class Agent(ABC):
         metadata["tool_calls_count"] = 0
         metadata["api_calls_count"] = len(metadata["turns"])
         metadata["error_count"] = 0
+        metadata["total_cost"] = 0
 
         # Aggregate statistics from all turns
         for turn in metadata["turns"]:
@@ -79,6 +80,9 @@ class Agent(ABC):
             metadata["total_tokens"]["prompt_tokens"] += in_tokens
             metadata["total_tokens"]["completion_tokens"] += out_tokens
             metadata["total_tokens"]["total_tokens"] += in_tokens + out_tokens
+
+            # Aggregate cost
+            metadata["total_cost"] += turn["cost"]
 
             # Count errors
             metadata["error_count"] += len(turn["errors"])
@@ -139,6 +143,9 @@ class Agent(ABC):
         turn_metadata = response.metadata.model_dump()
         turn_metadata["tool_calls"] = []
         turn_metadata["errors"] = []
+        turn_metadata["cost"] = (
+            response.metadata.cost.total if response.metadata.cost else 0
+        )
 
         # Log the thinking content if available
         if reasoning_text:
@@ -293,6 +300,7 @@ class Agent(ABC):
             "api_calls_count": 0,
             "error_count": 0,
             "submission_count": 0,
+            "total_cost": 0,
             "max_submissions_reached": False,
             "best_subtask_scores": None,
             "has_submissions": False,
