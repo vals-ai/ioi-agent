@@ -9,6 +9,7 @@ from submodules.ioi_agent.tool import Tool
 from model_library.base import (
     LLM,
     QueryResult,
+    QueryResultMetadata,
     TextInput,
     ToolCall,
     ToolResult,
@@ -39,6 +40,8 @@ class ToolCallException(Exception):
 
 
 class Agent(ABC):
+    _query_result_metadata: list[QueryResultMetadata] = []
+
     def __init__(
         self,
         tools: dict[str, Tool],
@@ -50,7 +53,9 @@ class Agent(ABC):
         self.max_turns = max_turns
         self.input_items = []
 
-    def _merge_statistics(self, metadata: dict[str, Any]) -> dict[str, Any]:
+    def _merge_statistics(
+        self, metadata: dict[str, Any], query_result_metadata: list[QueryResultMetadata]
+    ) -> dict[str, Any]:
         """
         Merge turn-level statistics into session-level statistics.
 
@@ -61,29 +66,13 @@ class Agent(ABC):
             dict: Updated metadata with merged statistics
         """
         # Reset aggregate values to recalculate
-        metadata["total_tokens"] = {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0,
-        }
         metadata["tool_usage"] = {}
         metadata["tool_calls_count"] = 0
         metadata["api_calls_count"] = len(metadata["turns"])
         metadata["error_count"] = 0
-        metadata["total_cost"] = 0
 
         # Aggregate statistics from all turns
         for turn in metadata["turns"]:
-            # Aggregate token usage
-            in_tokens = turn["in_tokens"]
-            out_tokens = turn["out_tokens"]
-            metadata["total_tokens"]["prompt_tokens"] += in_tokens
-            metadata["total_tokens"]["completion_tokens"] += out_tokens
-            metadata["total_tokens"]["total_tokens"] += in_tokens + out_tokens
-
-            # Aggregate cost
-            metadata["total_cost"] += turn["cost"]
-
             # Count errors
             metadata["error_count"] += len(turn["errors"])
 
@@ -100,6 +89,14 @@ class Agent(ABC):
             start = datetime.fromisoformat(metadata["start_time"])
             end = datetime.fromisoformat(metadata["end_time"])
             metadata["total_duration_seconds"] = (end - start).total_seconds()
+
+        # Aggregate query result metadata (need to start with the first one to mantain the cost per token information)
+        total_metadata = query_result_metadata[0]
+        for qr_metadata in query_result_metadata[1:]:
+            total_metadata = total_metadata.__add__(qr_metadata)
+
+        total_metadata_dict = total_metadata.model_dump()
+        metadata["total_metadata"] = total_metadata_dict
 
         return metadata
 
@@ -128,6 +125,8 @@ class Agent(ABC):
                 input=self.input_items,
                 tools=[tool.get_tool_repr() for tool in self.tools.values()],
             )
+
+            self._query_result_metadata.append(response.metadata)
         except Exception as e:
             raise ModelException(e)
 
@@ -143,9 +142,6 @@ class Agent(ABC):
         turn_metadata = response.metadata.model_dump()
         turn_metadata["tool_calls"] = []
         turn_metadata["errors"] = []
-        turn_metadata["cost"] = (
-            response.metadata.cost.total if response.metadata.cost else 0
-        )
 
         # Log the thinking content if available
         if reasoning_text:
@@ -289,18 +285,12 @@ class Agent(ABC):
             "start_time": datetime.now().isoformat(),
             "end_time": None,
             "total_duration_seconds": 0,
-            "total_tokens": {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-            },
             "turns": [],
             "tool_usage": {},
             "tool_calls_count": 0,
             "api_calls_count": 0,
             "error_count": 0,
             "submission_count": 0,
-            "total_cost": 0,
             "max_submissions_reached": False,
             "best_subtask_scores": None,
             "has_submissions": False,
@@ -368,6 +358,6 @@ class Agent(ABC):
             metadata["final_answer"] = final_answer
 
         # Merge turn-level statistics into session-level statistics
-        metadata = self._merge_statistics(metadata)
+        metadata = self._merge_statistics(metadata, self._query_result_metadata)
 
         return final_answer, metadata
