@@ -97,3 +97,5 @@ Day 2:
 ## Results
 
 IOI benchmark results are published on [vals.ai](https://www.vals.ai/benchmarks/ioi), where you can see how different AI models perform on competitive programming tasks. Recent evaluations show significant variation in model capabilities, with top performers achieving ~25% of the maximum score.
+
+<!-- Declarative environment verification: 2026-05-27 -->
