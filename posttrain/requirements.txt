@@ -1,0 +1,8 @@
+-r train/requirements.txt
+huggingface-hub
+pyarrow
+PyPDF2
+httpx
+numpy
+requests
+ruff
