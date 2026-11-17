@@ -1,0 +1,5 @@
+# Seven-day package aging for `uv pip install -r requirements.txt`.
+required-version = ">=0.9.17"
+exclude-newer = "7 days"
+# Internal vals-ai package: pick up new releases immediately.
+exclude-newer-package = { model-library = false }
