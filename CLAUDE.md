@@ -29,7 +29,7 @@ python test_agent.py --test 2025/obstacles --save-results
 
 ```bash
 # Install dependencies (requires model_library); uv.toml enforces 7-day package aging, plain pip ignores it
-uv venv --python 3.12 && uv pip install -r requirements.txt
+uv venv --python 3.12 && . .venv/bin/activate && uv pip install -r requirements.txt
 
 # Requires g++ compiler with C++20 support
 g++ --version

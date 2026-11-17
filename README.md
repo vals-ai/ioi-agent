@@ -39,7 +39,7 @@ The IOI Agent evaluates AI models on competitive programming problems from the I
 
 #### Installing Dependencies
 ```bash
-uv venv --python 3.12 && uv pip install -r requirements.txt
+uv venv --python 3.12 && . .venv/bin/activate && uv pip install -r requirements.txt
 ```
 [`uv.toml`](uv.toml) holds installs to packages published at least 7 days ago; plain `pip` ignores it.
 
