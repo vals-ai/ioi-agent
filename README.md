@@ -35,7 +35,7 @@ The IOI Agent evaluates AI models on competitive programming problems from the I
     - `bits/stdc++`
 - Access to Vals model proxy for LLM integration
 - [Git LFS](https://git-lfs.com/) for test cases
-- [uv](https://docs.astral.sh/uv/) 0.9.17+
+- [uv](https://docs.astral.sh/uv/) 0.9.25+
 
 #### Installing Dependencies
 ```bash
